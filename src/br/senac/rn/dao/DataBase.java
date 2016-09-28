@@ -14,7 +14,7 @@ public class DataBase {
     private final String USUARIO = "root";
     private final String SENHA = "senac";
 
-    public boolean getConexao() {
+    public boolean open() {
         try {
             Class.forName(DRIVER);
             conexao = DriverManager.getConnection(BANCO, USUARIO, SENHA);
@@ -29,7 +29,7 @@ public class DataBase {
         }
     }
 
-    public void fechar() {
+    public void close(){
         try {
             conexao.close();
             System.out.println("Desconectou");
