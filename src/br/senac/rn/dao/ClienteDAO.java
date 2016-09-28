@@ -1,6 +1,7 @@
 
 package br.senac.rn.dao;
 
+import br.senac.rn.model.Cliente;
 import br.senac.rn.model.Sexo;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,25 +10,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class SexoDAO {
+public class ClienteDAO {
+   
+
     
     private final DataBase db;
     private PreparedStatement ps;
     private ResultSet rs;
     private String sql;
     
-    public SexoDAO(){
+    public ClienteDAO(){
         db= new DataBase();
     }
     
     
-    public boolean insert(Sexo sexo) {
+    public boolean insert(Cliente cliente) {
        if (db.open()){
-           sql= "INSERT INTO sexo (NOME, SIGLA) VALUES (?, ?);";
+           sql= "INSERT INTO cliente (NOME, cpf, id_sexo) VALUES (?, ?, ?);";
            try{
               ps= db.conexao.prepareStatement(sql);
-              ps.setString(1, sexo.getNome());
-              ps.setString(2,sexo.getSigla());
+              ps.setString(1, cliente.getNome());
+              ps.setString(2,cliente.getCpf());
+              ps.setInt(3, cliente.getSexo().getId());
+              
             
               if (ps.executeUpdate()== 1){
                  ps.close();
@@ -44,12 +49,12 @@ public class SexoDAO {
        
        
     }
-   public boolean delete (Sexo sexo){
+   public boolean delete (Cliente cliente){
        if (db.open()){
-        sql= "DELETE FROM SEXO WHERE ID = ? ";
+        sql= "DELETE FROM cliente WHERE ID = ? ";
            try{
                ps = db.conexao.prepareStatement(sql);
-               ps.setInt(1,sexo.getId());
+               ps.setInt(1,cliente.getId());
                if(ps.executeUpdate() == 1){
                   ps.close();
                   db.close();
@@ -66,14 +71,14 @@ public class SexoDAO {
       
    }
    
-   public boolean update (Sexo sexo){
+   public boolean update (Cliente cliente){
        if (db.open()){
-        sql= "UPDATE SEXO SET NOME = ?, SIGLA=? WHERE ID = ?;";
+        sql= "UPDATE cliente SET NOME = ?, cpf=?, id_sexo=? WHERE ID = ?;";
            try{
                ps = db.conexao.prepareStatement(sql);
-               ps.setString(1, sexo.getNome());
-               ps.setString(2,sexo.getSigla());
-               ps.setInt (3, sexo.getId());
+               ps.setString(1, cliente.getNome());
+               ps.setString(2,cliente.getCpf());
+               ps.setInt (3, cliente.getSexo().getId());
    
                if (ps.executeUpdate() ==1){
                   ps.close();
@@ -91,26 +96,29 @@ public class SexoDAO {
        
    }
    
-   public List<Sexo> selectAll(){
+   public List<Cliente> selectAll(){
      if (db.open()){
-       List<Sexo> sexos = new ArrayList();
-       sql = "SELECT * FROM sexo";
+       List<Cliente> clientes = new ArrayList();
+       SexoDAO sexodao = new SexoDAO();
+       sql = "SELECT * FROM cliente";
        try {
            ps = db.conexao.prepareStatement(sql);
            rs= ps.executeQuery();
+           
            while (rs.next()){
-                 Sexo sexo = new Sexo();
-                 sexo.setId(rs.getInt(1));
-                 sexo.setNome(rs.getString(2));
-                 sexo.setSigla(rs.getString(3));
+                 Cliente cliente = new Cliente();
+                 cliente.setId(rs.getInt(1));
+                 cliente.setNome(rs.getString(2));
+                 cliente.setCpf(rs.getString(3));
+                 cliente.setSexo(sexodao.selectId(rs.getInt(4)));
                  
-                 sexos.add(sexo);    
+                 clientes.add(cliente);    
            
            }
            rs.close();
            ps.close();
            db.close();
-           return sexos;
+           return clientes;
        }catch (SQLException error){
           System.out.println("ERRO: "+ error.toString());
        
@@ -121,26 +129,30 @@ public class SexoDAO {
          return null;
        
    }
-   public List<Sexo> selectFilter(String filter){
+   public List<Cliente> selectFilter(String filter){
    if (db.open()){
-       List<Sexo> sexos = new ArrayList();
+       List<Cliente> clientes = new ArrayList();
        String filtro = "%"+filter +"%";
        sql = "SELECT * FROM SEXO WHERE NOME LIKE ? OR SIGLA LIKE ? ;";
+       SexoDAO sexodao = new SexoDAO();
        try {
            ps = db.conexao.prepareStatement(sql);
            ps.setString(1, filtro);
            ps.setString(2, filtro);
            rs= ps.executeQuery();
            while (rs.next()){
-                 Sexo sexo = new Sexo();
-                 sexo.setNome(rs.getString(1));
-                 sexo.setSigla(rs.getString(2));
+                 Cliente cliente = new Cliente();
+                 cliente.setId(rs.getInt(1));
+                 cliente.setNome(rs.getString(2));
+                 cliente.setCpf(rs.getString(3));
+                 cliente.setSexo(sexodao.selectId(rs.getInt(4)));
+                 clientes.add(cliente); 
                 
            }
            rs.close();
            ps.close();
            db.close();
-           return sexos;
+           return clientes;
        }catch (SQLException error){
           System.out.println("ERRO: "+ error.toString());
        
@@ -152,24 +164,27 @@ public class SexoDAO {
    
    }
    
-   public Sexo selectId(int id){
+   public Cliente selectId(int id){
    if (db.open()){
-       sql = "SELECT * FROM SEXO WHERE ID = ?;";
-       
+       sql = "SELECT * FROM cliente WHERE ID = ?;";
+       SexoDAO sexodao = new SexoDAO();
        try {
            ps = db.conexao.prepareStatement(sql);
            ps.setInt(1, id);
            rs= ps.executeQuery();  
            if (rs.next()){
-                 Sexo sexo = new Sexo();
-                 sexo.setNome(rs.getString(1));
-                 sexo.setSigla(rs.getString(2));
+                 Cliente cliente = new Cliente();
+                 cliente.setId(rs.getInt(1));
+                 cliente.setNome(rs.getString(2));
+                 cliente.setCpf(rs.getString(3));
+                 cliente.setSexo(sexodao.selectId(rs.getInt(4)));
+                 
                  
                   
                  rs.close();
                  ps.close();
                  db.close();    
-                 return sexo;
+                 return cliente;
            }
          
        }catch (SQLException error){
@@ -189,8 +204,6 @@ public class SexoDAO {
 }
     
     
-
-
     
     
-
+    
